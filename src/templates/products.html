@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Listino{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Gestione listino</h1>
+
+<!-- Form aggiunta nuovo prodotto -->
+<form method="post" action="{{ url_for('products') }}" class="flex flex-wrap gap-2 mb-6">
+  <input name="name" required placeholder="Nuovo prodotto" class="flex-1 p-2 border rounded">
+  <input name="price" required placeholder="Prezzo (es. 2,50)" class="w-32 p-2 border rounded text-right">
+  <select name="category" required placeholder="Categoria (es. Bibite)" class="w-40 p-2 border rounded">
+    <option value="bar">bar</option>
+    <option value="cucina">cucina</option>
+    <option value="dessert">dessert</option>
+  </select>
+  <button class="bg-teal-600 text-white px-4 rounded">Aggiungi</button>
+</form>
+
+<!-- Tabella prodotti -->
+<table class="w-full bg-white shadow">
+  <thead>
+    <tr class="bg-gray-200">
+      <th class="py-2 px-3 text-left">Prodotto</th>
+      <th class="py-2 px-3 text-right">Prezzo</th>
+      <th class="py-2 px-3 text-left">Categoria</th>
+      <th class="py-2 px-3 text-right">Azioni</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for it in items %}
+    <tr class="border-t">
+      <form method="post" action="{{ url_for('update_product', pid=it.id) }}">
+        <td class="px-3 py-2">
+          <input name="name" value="{{ it.name }}" class="w-full p-1 border rounded">
+        </td>
+        <td class="px-3 py-2 text-right">
+          <input name="price" value="{{ "€ {:,.2f}".format(it.price) }}" class="w-24 p-1 border rounded text-right">
+        </td>
+        <td class="px-3 py-2">
+          <select name="category" value="{{ it.category }}" class="w-full p-1 border rounded">
+            <option value="bar" {% if it.category == 'bar' %}selected{% endif %}>bar</option>
+            <option value="cucina" {% if it.category == 'cucina' %}selected{% endif %}>cucina</option>
+            <option value="dessert" {% if it.category == 'dessert' %}selected{% endif %}>dessert</option>
+          </select>
+        </td>
+        <td class="px-3 py-2 text-right space-x-1">
+          <button class="text-white px-3 py-1 rounded">💾</button>
+          <a href="{{ url_for('delete', pid=it.id) }}" class="text-red-600 hover:underline">🗑</a>
+        </td>
+      </form>
+    </tr>
+    {% else %}
+      <tr><td colspan="4" class="p-4 text-center">Nessun prodotto</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

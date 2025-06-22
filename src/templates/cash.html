@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Cassa{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Cassa</h1>
+
+<div class="flex flex-row gap-6">
+  <!-- COLONNA SINISTRA: PRODOTTI -->
+  <div class="w-2/3 overflow-y-auto max-h-[80vh] pr-2">
+    {% set categories = {} %}
+    {% for it in items %}
+      {% set _ = categories.setdefault(it.category, []).append(it) %}
+    {% endfor %}
+
+    {% for category, prods in categories.items() %}
+
+      <h2 class="text-sm font-semibold text-gray-500 mt-4 mb-2">{{ category|upper }}</h2>
+      <div class="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-4 gap-3 mb-4">
+        {% for it in prods %}
+          <button
+            type="button"
+            class="bg-white border shadow p-3 rounded hover:bg-blue-100 active:bg-blue-200"
+            onclick="addItem({{ it.id }}, '{{ it.name }}', {{ it.price }})">
+            <div class="text-center font-medium text-left truncate">{{ it.name }}</div>
+            <div class="text-sm text-gray-500">{{ "€ {:,.2f}".format(it.price) }}</div>
+          </button>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- COLONNA DESTRA: RIEPILOGO -->
+  <div class="w-1/3 sticky top-4 self-start">
+    <form id="order-form" method="post">
+      <div class="bg-white p-4 shadow rounded h-fit">
+        <h2 class="text-lg font-semibold mb-3">Riepilogo ordine</h2>
+        <table class="w-full mb-2 text-sm" id="order-table" style="display:none;">
+          <thead>
+            <tr class="border-b">
+              <th class="text-right py-1">Prodotto</th>
+              <th class="text-center py-1">Q.tà</th>
+              <th class="text-right py-1">Totale</th>
+            </tr>
+          </thead>
+          <tbody id="order-body"></tbody>
+          <tfoot>
+            <tr class="border-t font-bold">
+              <td colspan="2" class="text-right py-2">Totale:</td>
+              <td class="text-right py-2" id="total-eur">0,00 EUR</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <button type="submit"
+                class="bg-green-500 text-white px-4 py-2 rounded w-full mt-2"
+                id="submit-btn" style="display:none;">
+          🖨 Stampa scontrino
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const order = {};  // id: {name, price, qty}
+
+function addItem(id, name, price) {
+  if (!order[id]) {
+    order[id] = {name, price, qty: 1};
+  } else {
+    order[id].qty += 1;
+  }
+  renderOrder();
+}
+
+function removeItem(id) {
+  if (!order[id]) return;
+  order[id].qty -= 1;
+  if (order[id].qty <= 0) {
+    delete order[id];
+  }
+  renderOrder();
+}
+
+
+function renderOrder() {
+  const tbody = document.getElementById("order-body");
+  const table = document.getElementById("order-table");
+  const button = document.getElementById("submit-btn");
+  tbody.innerHTML = "";
+  let total = 0;
+
+  for (const [id, item] of Object.entries(order)) {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td class="py-1 flex justify-between items-center">
+        <button type="button" onclick="removeItem(${id})"
+                class="ml-2 text-red-600 hover:text-red-800 font-bold text-sm">✕</button>
+        ${item.name}
+      </td>
+      <td class="py-1 text-center">${item.qty}</td>
+      <td class="py-1 text-right">${(item.price * item.qty).toFixed(2).replace('.', ',')} EUR</td>
+      <input type="hidden" name="qty_${id}" value="${item.qty}">
+    `;
+    tbody.appendChild(row);
+    total += item.price * item.qty;
+  }
+
+  document.getElementById("total-eur").textContent = total.toFixed(2).replace('.', ',') + " EUR";
+  const show = Object.keys(order).length > 0;
+  table.style.display = show ? "table" : "none";
+  button.style.display = show ? "block" : "none";
+}
+
+</script>
+{% endblock %}
