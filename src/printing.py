@@ -1,27 +1,28 @@
 # printing.py
 import subprocess, datetime
 
-WIDTH = 42
+WIDTH = 48
 CASH_REGISTER = 1   # oppure 2
 
 def money(val: float) -> str:
     return f"{val:,.2f} EUR".replace(".", ",")
 
-def print_receipt(order_items, printer_name):
+def print_receipt(order_items, order_id, printer_name):
     """order_items = list di tuple (nome, qty, prezzo_unitario)"""
     now = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-    header = f"Cassa {CASH_REGISTER} - {now}".center(WIDTH)
+    header = f"Cassa {CASH_REGISTER} - Ordine {order_id} - {now}".center(WIDTH)
     lines = [header, "-"*WIDTH,
-             f"{'Prodotto':<20}{'Pezzi':^6}{'Prezzo':>16}",
+             f"{'Prodotto':<26}{'Quantita':^6}{'Prezzo':>14}",
              "-"*WIDTH]
 
     for name, qty, price_each in order_items:
-        lines.append(f"{name:<20}{qty:^6}{money(price_each):>16}")
+        lines.append(f"{name:<26}{qty:^6}{money(price_each):>16}")
 
     lines.append("-"*WIDTH)
     total = sum(q*p for _, q, p in order_items)
-    lines.append(f"{'Totale:':<26}{money(total):>16}")
-    lines.append("\n"*5)           # margine di strappo
+    lines.append(f"{'Totale:':<28}{money(total):>20}")
+    lines.append("\n"*12)           # margine di strappo
+    #lines.append(".")
 
     subprocess.run(
         ["lp", "-d", printer_name, "-o", "raw"],

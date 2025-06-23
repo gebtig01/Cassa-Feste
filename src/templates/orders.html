@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Listino{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Ordini</h1>
+
+<!-- Tabella prodotti -->
+<table class="w-full bg-white shadow">
+  <thead>
+    <tr class="bg-gray-200">
+      <th class="py-2 px-3 text-left">Ordine</th>
+      <th class="py-2 px-3 text-left">Sommario contenuto</th>
+      <th class="py-2 px-3 text-left">Data e ora</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for it in items %}
+    <tr class="border-t">
+        <td class="px-3 py-2">{{ it.id_order }}</td>
+        <td class="px-3 py-2">{{ it.products }}</td>
+        <td class="px-3 py-2 space-x-1">{{ it.order_date.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('print_order', pid=it.id_order) }}">
+            <button type="submit" class=" w-full">🖨</button>
+          </form>
+        </td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_order', pid=it.id_order) }}">
+            <button type="submit" class=" w-full">🗑</button>
+          </form>
+        </td>
+
+    </tr>
+    {% else %}
+      <tr><td colspan="4" class="p-4 text-center">Nessun ordine registrato</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+function print_order(id){
+  alert(id);
+}
+</script>
+{% endblock %}

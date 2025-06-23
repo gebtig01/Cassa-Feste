@@ -50,10 +50,21 @@
           </tfoot>
         </table>
 
+        <button type="button"
+                class="bg-green-500 text-white px-4 py-2 rounded w-full mt-2"
+                id="next-btn" style="display:none;" onclick="renderRest()">
+          ➡️ Prosegui con il pagamento
+        </button>
+
+        <div id="rest-calculator" style="display: none;">
+          <input id="rest-calculator-input" autocomplete="one-time-code"  placeholder="Inserisci l'importo che ti sta versando il cliente" type="float" name="rest" class="mt-2 px-4 py-2 w-full p-1 border rounded" onkeyup="updateRestCalc()">
+          <p class="mt-2 text-right text-red-600">Devi dare un resto di € <b><span id="result-rest"></span></b></p>
+        </div>
+
         <button type="submit"
                 class="bg-green-500 text-white px-4 py-2 rounded w-full mt-2"
                 id="submit-btn" style="display:none;">
-          🖨 Stampa scontrino
+          🖨 Chiudi ordine e stampa scontrino
         </button>
       </div>
     </form>
@@ -81,11 +92,26 @@ function removeItem(id) {
   renderOrder();
 }
 
+function updateRestCalc(){
+  total = parseFloat(document.getElementById("total-eur").innerHTML.replace(" EUR","").replace(",","."));
+  payment = parseFloat(document.getElementById("rest-calculator-input").value.replace(",","."));
+  rest = payment - total;
+  console.log(total, payment, rest)
+  document.getElementById("result-rest").innerHTML = rest.toFixed(2).replace('.', ',');
+}
+
+function renderRest(){
+  total = document.getElementById("total-eur");
+  document.getElementById("rest-calculator").style.display = "block";
+  document.getElementById("submit-btn").style.display = "block";
+}
+
 
 function renderOrder() {
   const tbody = document.getElementById("order-body");
   const table = document.getElementById("order-table");
-  const button = document.getElementById("submit-btn");
+  const payment_button = document.getElementById("next-btn");
+  const printer_button = document.getElementById("submit-btn");
   tbody.innerHTML = "";
   let total = 0;
 
@@ -108,7 +134,7 @@ function renderOrder() {
   document.getElementById("total-eur").textContent = total.toFixed(2).replace('.', ',') + " EUR";
   const show = Object.keys(order).length > 0;
   table.style.display = show ? "table" : "none";
-  button.style.display = show ? "block" : "none";
+  payment_button.style.display = show ? "block" : "none";
 }
 
 </script>
