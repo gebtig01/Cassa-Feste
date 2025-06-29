@@ -56,10 +56,24 @@
           ➡️ Prosegui con il pagamento
         </button>
 
-        <div id="rest-calculator" style="display: none;">
-          <input id="rest-calculator-input" autocomplete="one-time-code"  placeholder="Inserisci l'importo che ti sta versando il cliente" type="float" name="rest" class="mt-2 px-4 py-2 w-full p-1 border rounded" onkeyup="updateRestCalc()">
-          <p class="mt-2 text-right text-red-600">Devi dare un resto di € <b><span id="result-rest"></span></b></p>
+        <div id="info-addon" style="display: none;">
+          <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <div class="mb-4">
+              <label class="block text-gray-700 text-sm font-bold mb-2" for="rest">
+                Incasso per resto
+              </label>
+              <input onkeyup="updateRestCalc()" id="rest-calculator-input"  autocomplete="one-time-code" type="float" name="rest" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="rest" type="text" placeholder="Inserisci l'importo versato dal cliente">
+              <p class="mt-2 text-right text-red-600">Devi dare un resto di € <b><span id="result-rest"></span></b></p>
+            </div>
+            <div class="mb-6">
+              <label class="block text-gray-700 text-sm font-bold mb-2" for="table-id">
+                Tavolo
+              </label>
+              <input class="shadow appearance-none rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" name="table" id="table-id" type="int" placeholder="Inserisci il numero del tavolo">
+            </div>
+          </form>
         </div>
+        
 
         <button type="submit"
                 class="bg-green-500 text-white px-4 py-2 rounded w-full mt-2"
@@ -102,7 +116,7 @@ function updateRestCalc(){
 
 function renderRest(){
   total = document.getElementById("total-eur");
-  document.getElementById("rest-calculator").style.display = "block";
+  document.getElementById("info-addon").style.display = "block";
   document.getElementById("submit-btn").style.display = "block";
 }
 

@@ -156,13 +156,19 @@ def cash():
                 if it.startswith("qty"):
                     product_id = it.split("_")[1]
                     product_qty = int(request.form.get(it))
+                    
                     app.logger.info(f"Ordine con {product_id} in {product_qty} pezzi")
                     for q in range(0,product_qty):
                         db.session.add(Order(id_order=next_id_order, id_product=product_id))
                     db.session.commit()
                     order_ok = True
-            if order_ok:                
-                print_receipt(order, next_id_order, printer_name=app.config["PRINTER_NAME"])
+            if order_ok:   
+                table = "-"            
+                if request.form.get("table") != 0:   
+                    table = request.form.get("table")
+                if request.form.get("rest") != 0:   
+                    rest = int(request.form.get("rest"))
+                print_receipt(order, next_id_order, table, rest, printer_name=app.config["PRINTER_NAME"])
                 flash("Scontrino stampato!", "success")
             else:
                 flash("Errore con l'ordine!", "success")

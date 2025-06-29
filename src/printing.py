@@ -7,11 +7,12 @@ CASH_REGISTER = 1   # oppure 2
 def money(val: float) -> str:
     return f"{val:,.2f} EUR".replace(".", ",")
 
-def print_receipt(order_items, order_id, printer_name):
+def print_receipt(order_items, order_id, table_no, rest, printer_name):
     """order_items = list di tuple (nome, qty, prezzo_unitario)"""
     now = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-    header = f"Cassa {CASH_REGISTER} - Ordine {order_id} - {now}".center(WIDTH)
-    lines = [header, "-"*WIDTH,
+    header1 = f"Cassa {CASH_REGISTER} - {now}".center(WIDTH)
+    header2 = f"Ordine {order_id} - Tavolo {table_no}".center(WIDTH)
+    lines = [header1, header2, "-"*WIDTH,
              f"{'Prodotto':<26}{'Quantita':^6}{'Prezzo':>14}",
              "-"*WIDTH]
 
@@ -21,6 +22,7 @@ def print_receipt(order_items, order_id, printer_name):
     lines.append("-"*WIDTH)
     total = sum(q*p for _, q, p in order_items)
     lines.append(f"{'Totale:':<28}{money(total):>20}")
+    lines.append(f"{'Resto ricevuto:':<28}{money(rest):>20}")
     lines.append("\n"*12)           # margine di strappo
     #lines.append(".")
 
