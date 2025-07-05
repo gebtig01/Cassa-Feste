@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc, func
 import argparse
 from printing import print_receipt
-from datetime import datetime
+from datetime import datetime, date
 
 
 app = Flask(__name__)
@@ -22,7 +22,9 @@ class Product(db.Model):
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_order = db.Column(db.Integer, nullable=False) 
-    id_product = db.Column(db.String(60), nullable=False)
+    id_product = db.Column(db.Integer, nullable=False)
+    id_table = db.Column(db.Integer, nullable=True, default=0)
+    rest = db.Column(db.Float, nullable=False, default=0)
     date = db.Column(db.DateTime, default=datetime.now)
 
 # ----- Rotte -----------------------------------------------------------------
@@ -56,6 +58,8 @@ def orders():
             Product.name,
             func.count().label("qty"),
             func.min(Order.date).label("order_date"),
+            Order.id_table,
+            Order.rest
         )
         .join(Product, Order.id_product == Product.id)
         .group_by(Order.id_order, Product.id)          # <- conta le ripetizioni
@@ -66,12 +70,13 @@ def orders():
     # 2) Riorganizziamo i dati così:
     #    { 15: {"date": ..., "products": ["Panino (2)", "Coca-Cola"]}, ... }
     summary = {}
-    for id_order, name, qty, order_date in rows:
+    for id_order, name, qty, order_date, id_table, rest in rows:
         entry = summary.setdefault(
-            id_order, {"date": order_date, "products": []}
+            id_order, {"date": order_date, "products": [], "rest": rest, "table": id_table}
         )
         label = f"{name} ({qty})" if qty > 1 else name
         entry["products"].append(label)
+
 
     # 3) Prepariamo la lista che passeremo al template
     items = [
@@ -79,11 +84,30 @@ def orders():
             "id_order": oid,
             "products": ", ".join(data["products"]),
             "order_date": data["date"],
+            "table": data["table"],
+            "rest": data["rest"]
         }
         for oid, data in summary.items()
     ]
 
-    return render_template("orders.html", items=items)
+    # Calcolo totali
+    # Inizio e fine della giornata attuale
+    start_of_day = datetime.combine(date.today(), datetime.min.time())
+    end_of_day = datetime.combine(date.today(), datetime.max.time())
+
+    # Query per il totale dei prezzi dei prodotti venduti oggi
+    total_today = db.session.query(func.sum(Product.price)) \
+        .select_from(Order) \
+        .join(Product, Product.id == Order.id_product) \
+        .filter(Order.date >= start_of_day, Order.date <= end_of_day) \
+        .scalar()
+    # Query per il totale dei prezzi dei prodotti venduti    
+    total = db.session.query(func.sum(Product.price)) \
+        .select_from(Order) \
+        .join(Product, Product.id == Order.id_product) \
+        .scalar()
+    app.logger.info(f"{total_today}")
+    return render_template("orders.html", items=items, total_today=total_today, total=total)
 
 @app.route("/update/<int:pid>", methods=["POST"])
 def update_product(pid):
@@ -118,7 +142,9 @@ def print_order(pid):
         db.session.query(
             Product.name,
             func.count().label("qty"),
-            Product.price
+            Product.price,
+            Order.id_table,
+            Order.rest
         )
         .join(Order, Order.id_product == Product.id)
         .filter(Order.id_order == pid)
@@ -127,9 +153,9 @@ def print_order(pid):
     )
 
     # Restituisce una lista di tuple: (nome, quantità, prezzo)
-    order = [(name, qty, price) for name, qty, price in results]
+    order = [(name, qty, price) for name, qty, price, id_table, rest in results]
     app.logger.info(f"{order}")
-    print_receipt(order, pid, printer_name=app.config["PRINTER_NAME"])
+    print_receipt(order, pid, results[0][3], results[0][4], printer_name=app.config["PRINTER_NAME"])
     return redirect(url_for('orders'))
 
 # --- pagina cassa ---
@@ -149,6 +175,7 @@ def cash():
             return redirect(url_for("cash"))
 
         # Conferma ordine e stampa
+        app.logger.info(f"{request.form}")
         try:
             next_id_order = (db.session.query(func.max(Order.id_order)).scalar() or 0) + 1
             order_ok = False
@@ -156,19 +183,23 @@ def cash():
                 if it.startswith("qty"):
                     product_id = it.split("_")[1]
                     product_qty = int(request.form.get(it))
-                    
-                    app.logger.info(f"Ordine con {product_id} in {product_qty} pezzi")
+                    table = rest = 0
+                    if request.form.get("table") != '':   
+                        table = int(request.form.get("table"))
+                    if request.form.get("rest") != '':   
+                        rest = float(request.form.get("rest"))
+
+                    app.logger.info(f"Ordine con {product_id} in {product_qty} pezzi, tavolo {table} e resto {rest}")
+                    total = sum(q*p for _, q, p in order)
+                    rest_gived = 0
+                    if rest: 
+                        rest_gived = rest - total
                     for q in range(0,product_qty):
-                        db.session.add(Order(id_order=next_id_order, id_product=product_id))
+                        db.session.add(Order(id_order=next_id_order, id_product=product_id, rest=rest_gived, id_table=table))
                     db.session.commit()
                     order_ok = True
             if order_ok:   
-                table = "-"            
-                if request.form.get("table") != 0:   
-                    table = request.form.get("table")
-                if request.form.get("rest") != 0:   
-                    rest = int(request.form.get("rest"))
-                print_receipt(order, next_id_order, table, rest, printer_name=app.config["PRINTER_NAME"])
+                print_receipt(order, next_id_order, table, rest_gived, printer_name=app.config["PRINTER_NAME"])
                 flash("Scontrino stampato!", "success")
             else:
                 flash("Errore con l'ordine!", "success")

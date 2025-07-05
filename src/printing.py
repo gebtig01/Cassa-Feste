@@ -23,9 +23,8 @@ def print_receipt(order_items, order_id, table_no, rest, printer_name):
     total = sum(q*p for _, q, p in order_items)
     lines.append(f"{'Totale:':<28}{money(total):>20}")
     lines.append(f"{'Incasso dato:':<28}{money(rest):>20}")
-    lines.append(f"{'Resto ricevuto:':<28}{money(rest-total):>20}")
+    lines.append(f"{'Resto ricevuto:':<28}{money(rest):>20}")
     lines.append("\n"*12)           # margine di strappo
-    #lines.append(".")
 
     subprocess.run(
         ["lp", "-d", printer_name, "-o", "raw"],

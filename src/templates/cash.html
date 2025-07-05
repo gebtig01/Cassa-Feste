@@ -32,8 +32,11 @@
   <div class="w-1/3 sticky top-4 self-start">
     <form id="order-form" method="post">
       <div class="bg-white p-4 shadow rounded h-fit">
-        <h2 class="text-lg font-semibold mb-3">Riepilogo ordine</h2>
-        <table class="w-full mb-2 text-sm" id="order-table" style="display:none;">
+        <h2 class="text-lg font-semibold mb-2">Tavolo</h2>
+        <input class="shadow appearance-none rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" name="table" id="table-id" type="int" placeholder="Inserisci il numero del tavolo">
+        <h2 class="text-lg font-semibold mt-3 mb-2">Ordine</h2>
+        <p class="text-gray-500" id="order-tips">Scegli i prodotti da aggiungere a sinistra</p>
+        <table class="w-full mb-3 mt-2 text-sm" id="order-table" style="display:none;">
           <thead>
             <tr class="border-b">
               <th class="text-right py-1">Prodotto</th>
@@ -50,26 +53,12 @@
           </tfoot>
         </table>
 
-        <button type="button"
-                class="bg-green-500 text-white px-4 py-2 rounded w-full mt-2"
-                id="next-btn" style="display:none;" onclick="renderRest()">
-          ➡️ Prosegui con il pagamento
-        </button>
-
-        <div id="info-addon" style="display: none;">
+        <div id="info-addon">
           <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
             <div class="mb-4">
-              <label class="block text-gray-700 text-sm font-bold mb-2" for="rest">
-                Incasso per resto
-              </label>
+              <h2 class="text-lg font-semibold mt-3 mb-2">Calcola resto</h2>
               <input onkeyup="updateRestCalc()" id="rest-calculator-input"  autocomplete="one-time-code" type="float" name="rest" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="rest" type="text" placeholder="Inserisci l'importo versato dal cliente">
-              <p class="mt-2 text-right text-red-600">Devi dare un resto di € <b><span id="result-rest"></span></b></p>
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 text-sm font-bold mb-2" for="table-id">
-                Tavolo
-              </label>
-              <input class="shadow appearance-none rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" name="table" id="table-id" type="int" placeholder="Inserisci il numero del tavolo">
+              <p class="mt-2 text-left text-red-600" id="rest-tips" style="display: None">Devi dare un resto di € <b><span id="result-rest"></span></b></p>
             </div>
           </form>
         </div>
@@ -110,21 +99,18 @@ function updateRestCalc(){
   total = parseFloat(document.getElementById("total-eur").innerHTML.replace(" EUR","").replace(",","."));
   payment = parseFloat(document.getElementById("rest-calculator-input").value.replace(",","."));
   rest = payment - total;
-  console.log(total, payment, rest)
+  tips = document.getElementById("rest-tips");
+  tips.style.display = payment ? "block" : "none";
   document.getElementById("result-rest").innerHTML = rest.toFixed(2).replace('.', ',');
 }
 
-function renderRest(){
-  total = document.getElementById("total-eur");
-  document.getElementById("info-addon").style.display = "block";
-  document.getElementById("submit-btn").style.display = "block";
-}
 
 
 function renderOrder() {
   const tbody = document.getElementById("order-body");
   const table = document.getElementById("order-table");
-  const payment_button = document.getElementById("next-btn");
+  const tips = document.getElementById("order-tips");
+  
   const printer_button = document.getElementById("submit-btn");
   tbody.innerHTML = "";
   let total = 0;
@@ -148,7 +134,8 @@ function renderOrder() {
   document.getElementById("total-eur").textContent = total.toFixed(2).replace('.', ',') + " EUR";
   const show = Object.keys(order).length > 0;
   table.style.display = show ? "table" : "none";
-  payment_button.style.display = show ? "block" : "none";
+  tips.style.display = show ? "none" : "block";
+  printer_button.style.display = show ? "block" : "none";
 }
 
 </script>

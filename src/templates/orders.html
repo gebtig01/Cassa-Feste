@@ -3,12 +3,15 @@
 {% block content %}
 <h1 class="text-2xl font-bold mb-4">Ordini</h1>
 
+<h4 class="mb-4">Incasso della giornata: <b>{{ "€ {:,.2f}".format(total_today) }}</b><br>Incasso totale: <b>{{ "€ {:,.2f}".format(total) }}</b></h4>
 <!-- Tabella prodotti -->
 <table class="w-full bg-white shadow">
   <thead>
     <tr class="bg-gray-200">
       <th class="py-2 px-3 text-left">Ordine</th>
       <th class="py-2 px-3 text-left">Sommario contenuto</th>
+      <th class="py-2 px-3 text-left">Tavolo</th>
+      <th class="py-2 px-3 text-left">Resto</th>
       <th class="py-2 px-3 text-left">Data e ora</th>
       <th></th>
       <th></th>
@@ -19,6 +22,8 @@
     <tr class="border-t">
         <td class="px-3 py-2">{{ it.id_order }}</td>
         <td class="px-3 py-2">{{ it.products }}</td>
+        <td class="px-3 py-2">{{ it.table }}</td>
+        <td class="px-3 py-2">{{ "€ {:,.2f}".format(it.rest) }}</td>
         <td class="px-3 py-2 space-x-1">{{ it.order_date.strftime('%Y-%m-%d %H:%M') }}</td>
         <td>
           <form method="POST" action="{{ url_for('print_order', pid=it.id_order) }}">
